@@ -15,10 +15,13 @@
 
 ;;m=2n
 (define (middle-n-digits m)
-  (let ((sn (number->string n)))
-    (
+  (let* ((sn (number->string m))
+         (n (/ m 2))
+         (lower (/ (- m n) 2))
+         (upper (- (/ (+ m n) 2) 1)))))
 
 
+    
 
 
 

@@ -1,12 +1,20 @@
 #lang racket
 
 
-(provide mlist list->mlist mlist->list mlength mmap mcadr mcdar mcaar mcaaar mcddr mcaddr mcdddr mcadddr)
+(provide mlist insert-mlist! list->mlist mlist->list mlength mmap mcadr mcdar mcaar mcaaar mcddr mcaddr mcdddr mcadddr)
 
 (define (mlist . args)
   (if (null? args)
       null
       (mcons (car args) (apply mlist (cdr args)))))
+(define (insert-mlist! x mutlist)
+  (cond [(null? mutlist)
+         (set! mutlist (mcons 5 mutlist))]
+        [else
+         (define (rec ml)
+           (if (null? (mcdr ml))
+               (set-mcdr! ml (mcons x null))
+               (rec (mcdr ml))))]))
 (define (list->mlist l)
   (apply mlist l))
 (define (mlist->list ml)
