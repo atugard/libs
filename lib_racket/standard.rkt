@@ -1,34 +1,41 @@
-(require "mutable.rkt")
+;;(require "mutable.rkt")
 
 ;;(provide rand)
-;;
-;;(define (rand n)
-;;  (let ((already_seen null))
-;;    (define (loop)
-;;      (insert-mlist! n already_seen)
-;;      (define m
-;;        (middle-n-digits (* n n (expt 10 n))))
-;;      (set! n m))
-;;    (loop)))
-
-;;m=2n
-(define (middle-n-digits m n)
-  (let* ((sn (number->string m))
-         (k (string-length sn))
-         (n (/ m 2))
-         (lower (floor (/ n 2))))
-    (define (rec i)
-      (if (= i (- (+ lower n) 1))
-          null
-          (cons (string-ref sn i) (rec (+ i 1)))))
-    (rec lower)))
-k
+;;substring, string-append, string-length, build-string...
+;;We can simply find the difference between the length and desired length, and append a string of that many 0s to the end.
+;;I think it may be easiest to tranfer everything to lists, rather than strings, in Racket, because I suspect, anyways, strings are lists.
 
 
-    
+;
+(define (number->list a)
+  (string->list (number->string a)))
+(define (list->number a)
+  (number->string (string-> a)))
+
+(define (zfill z n)
+  (define (add-zeroes z n)
+    (define (generatestring c len)
+      (define (build-list i)
+        (if (= i 0)
+            null
+            (cons c (build-list (- i 1)))))
+      (apply string (build-list len)))
+    (string-append z (generatestring '#\0 n)))
+  (let ((m (string-length z)))
+    (cond [(= n m) z]
+          [(< n m) (error "String length must be less than fill number. String length: " m "Fill number: " n)]
+          [else
+           (let ((k (- n m)))
+             (add-zeroes z k))])))
 
 
-
+(define (rand seed)
+  (let* ((already_seen null)
+        (s (number->string seed))
+        (n (length s)))
+    (define (unnamed number)
+      (if (not (membq already_seen))
+          (pad-to-n (number->string (* number number))
 ;;seed_number = int(input("Please enter a four digit number:\n[####] "))
 ;;number = seed_number
 ;;already_seen = set()
