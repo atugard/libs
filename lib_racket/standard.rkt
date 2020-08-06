@@ -1,24 +1,28 @@
-#lang racket
-
 (require "mutable.rkt")
 
-(provide rand)
-
-(define (rand n)
-  (let ((already_seen null))
-    (define (loop)
-      (insert-mlist! n already_seen)
-      (define m
-        (middle-n-digits (* n n (expt 10 n))))
-      (set! n m))
-    (loop)))
+;;(provide rand)
+;;
+;;(define (rand n)
+;;  (let ((already_seen null))
+;;    (define (loop)
+;;      (insert-mlist! n already_seen)
+;;      (define m
+;;        (middle-n-digits (* n n (expt 10 n))))
+;;      (set! n m))
+;;    (loop)))
 
 ;;m=2n
-(define (middle-n-digits m)
+(define (middle-n-digits m n)
   (let* ((sn (number->string m))
+         (k (string-length sn))
          (n (/ m 2))
-         (lower (/ (- m n) 2))
-         (upper (- (/ (+ m n) 2) 1)))))
+         (lower (floor (/ n 2))))
+    (define (rec i)
+      (if (= i (- (+ lower n) 1))
+          null
+          (cons (string-ref sn i) (rec (+ i 1)))))
+    (rec lower)))
+k
 
 
     
