@@ -1,6 +1,7 @@
 #lang racket
 
 (require "table.rkt")
+
 (provide memoize)
 
 (define (memoize f)

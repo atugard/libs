@@ -1,7 +1,7 @@
-;;#lang racket
+#lang racket
 ;;
 ;;
-;;(provide mlist mlist? insert-mlist! in-mlist? list->mlist mlist->list mlength mmap mcadr mcdar mcaar mcaaar mcddr mcaddr mcdddr mcadddr)
+(provide mlist mlist? list->mlist mlist->list mlength mappend mmap mcadr mcdar mcaar mcaaar mcddr mcaddr mcdddr mcadddr)
 
 
 (define (mlist . args)
@@ -91,6 +91,8 @@
   (mcdr (mcadr ml)))
 (define (mcdddr ml)
   (mcdr (mcddr ml)))
+(define (mcddar ml)
+  (mcdr (mcdar ml)))
 (define (mcadddr ml)
   (mcar (mcdddr ml)))
 (define (mcaaadr ml)
@@ -105,8 +107,6 @@
   (mcar (mcdadr ml)))
 (define (mcaddar ml)
   (mcar (mcddar ml)))
-(define (mcadddr ml)
-  (mcar (mcdddr ml)))
 (define (mcdaaar ml)
   (mcdr (mcaaar ml)))
 (define (mcdaadr ml)
@@ -117,17 +117,12 @@
   (mcdr (mcaddr ml)))
 (define (mcddaar ml)
   (mcdr (mcdaar ml)))
-(define (mcddaar ml)
-  (mcdr (mcdaar ml)))
 (define (mcddadr ml)
   (mcdr (mcdadr ml)))
 (define (mcdddar ml)
   (mcdr (mcddar ml)))
 (define (mcddddr ml)
   (mcdr (mcdddr ml) ))
-
-(mmap (lambda (x y) (sqrt (+ x y))) (mlist 1 2 3) (mlist -1 -2 -3))
-
 
 
 

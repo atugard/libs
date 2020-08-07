@@ -3,7 +3,7 @@
 (require "mutable.rkt")
 
 (provide make-table table? get-val insert-table!)
- (mpair?
+
 (define (make-table . args)
   (cond [(null? args) (mlist '*table*)]
         [(null? (cdr args)) 
