@@ -34,23 +34,20 @@
         (if (= (cadr nums) num)
           (car nums)
           num)))))
-
-;;user doesn't need to know about transposition type, since a transposition is a permutation.
-(define (permutation . nums)
-  (if (number-list? nums)
-    (cons 'permutations nums)
-    (error "permutation is an n-ary operator of type number. you gave: " nums)))
-
-
-(define (permutation->transpositions p)
-  (let ((nums (cdr p)))
-    (define (rec-decomp ns)
-      (if (null? (cdr ns))
-        null
-        (cons (transposition (car ns) (cadr ns)) (rec-decomp (cdr ns)))))
-    (rec-decomp nums)))
-(define (transpositions->permutation ts)
-  ;;to be implemented
-  )
+;we always represent permutations as lists of transpositions
+;;and define a binary operator op:: (transposition, permutation)->permutation | (permutation, transposition)-> permutation
+(define (permutation . params)
+  (cond [(number-list? params)
+         (define (nums->transpositions nums)
+           (define (rec-decomp ns)
+             (if (null? (cdr ns))
+               null
+               (cons (transposition (car ns) (cadr ns)) (rec-decomp (cdr ns)))))
+           (rec-decomp nums))
+           (cons 'permutation (nums->transpositions params))]
+        [(transposition-list? params)
+         (cons 'permutation params)]
+        [else
+          (error "permutation is an n-ary operator that either takes all arguments of type number or all arguments of type transposition. you gave: " params)]))
 
 (define p (permutation 5 4 3 2 1))
