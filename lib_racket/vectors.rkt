@@ -94,11 +94,9 @@
 
 (define (matrix-multiplication m1 m2)
   (let* ((d1 (dim m1)) ;; dim(m1) = d1 = (a1 b1)
-         (a1 (car d1))
          (b1 (cadr d1))
          (d2 (dim m2)) ;; dim(m2) = d2 = (a2 b2)
-         (a2 (car d2))
-         (b2 (cadr d2)))
+         (a2 (car d2)))
       (if (not (= b1 a2))
         (error "tbd " m1 m2)
         (let* ((m2t (transpose m2))
@@ -123,8 +121,8 @@
 ;;                   (vector 0 0 1)))
 ;;
 ;;(define A (matrix (vector 1 2 3)
-                  (vector 5 4 3)
-                  (vector 3 1 5)))
+;;                  (vector 5 4 3)
+;;                  (vector 3 1 5)))
 
 
 
