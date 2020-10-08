@@ -46,14 +46,8 @@
       (* (rec 0 10000) (/ (- _b _a) 10000)))))
 
 (define (indefinite-integral f)
-  (lambda (x)
-    (let ((_x (* x 1.0)))
-      (define (rec i n)
-        (if (eq? i n)
-          0
-          (let ((t_i  (+ (* i (/ (- _x 0) n)) (/ (- _x 0) (* 2 n)))))
-            (+ (f t_i) (rec (+ i 1) n)))))
-      (* (rec 0 10000) (/ (- _x 0) 10000)))))
+  (let ((defintegralf (definite-integral f)))
+    (lambda (x) (defintegralf 0 x))))
 
 (define (derivative f)
   (lambda (x)
