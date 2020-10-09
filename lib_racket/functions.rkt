@@ -190,9 +190,13 @@
           (* (car args) (apply * (cdr args)))]))
 
 
-(define (compose f g)
+(define (compose . fs)
   (lambda (x)
-    (f (g x))))
+    (define (rec _fs)
+      (if (null? (cdr _fs))
+        ((car fs) x)
+        ((car fs) (apply compose (cdr fs)))))
+    (rec fs)))
 
 
 (define (expt a b)
