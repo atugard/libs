@@ -1,6 +1,6 @@
 #lang racket
 
-(provide type-list? contains-type?
+(provide type-list? number-list? contains-type?
          tag-list get-tag tagged-list?
          up down up? down? tuple?
          not-number? not-null? negative? positive? negative-symbol? plural-type-checker numbers? symbols? procedures? pairs?  tuples? not-numbers? negative-symbols?)
@@ -9,6 +9,8 @@
   (cond [(null? x) true]
         [(not (pair? x)) false]
         [else (and (type? (car x)) (type-list? (cdr x) type?))]))
+(define (number-list? nums)
+  (type-list? nums number?))
 (define (contains-type? x type?)
   (cond [(not (pair? x)) false] 
         [(type? (car x)) true]

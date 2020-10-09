@@ -52,13 +52,7 @@
 (define (magnitude v)
   (sqrt (dot-product v v)))
 
-
-
-
-
-
 ;;matrix stuff
-
 (define (matrix . vs)
   (cond [(null? vs) (list 'matrix)]
         [(not (vector-list? vs))
@@ -82,12 +76,12 @@
         [else
           (let ((vs (vectors m)))
               (and (vector-list? vs) (equal-dim? (dim (car vs)) (cdr vs))))]))
-(define (transpose m)
+(define (transpose-matrix m)
   (cond [(matrix? m)
          ;;(matrix v1 v2 v3) -> (matrix (map f v1 v2 v3))
-         (define (->transpose vs)
+         (define (->transpose-matrix vs)
            (apply matrix (apply map (cons (lambda cs (apply vector cs)) (map coords vs))))) ;; ((c1, c2) -> (vector (car c1) (car c2)) cs=(c1, c2) = ((coords v1) (coords v2))
-         (->transpose (vectors m))]
+         (->transpose-matrix (vectors m))]
         [else
           (error "transpose is a unary operator with one parameter of type matrix. you gave: " m)]))
 
@@ -99,29 +93,30 @@
          (a2 (car d2)))
       (if (not (= b1 a2))
         (error "tbd " m1 m2)
-        (let ((cols (vectors (transpose m2))))
+        (let ((rows (vectors m1))
+              (cols (vectors (transpose m2))))
           (define (generate-row row)
             (apply vector (map (lambda (col) (dot-product row col)) cols)))
-          (let ((rows (vectors m1)))
-            (define (loop i)
-              (if (= i b1)
-                null
-                (let ((row_i (list-ref rows i)))
-                  (cons (generate-row row_i) (loop (+ i 1))))))
-            (apply matrix (loop 0)))))))
+          (define (loop i)
+            (if (= i b1)
+              null
+              (cons (generate-row (list-ref rows i)) (loop (+ i 1)))))
+            (apply matrix (loop 0))))))
 
+
+;;det(A) = \sum_{\sigma \in S_n} (sgn(\sigma) \prod_{i=1}^n a_{i,\sigma(i)}
 
 
 
 
 ;;playing around
-;;(define I3 (matrix (vector 1 0 0) 
-;;                   (vector 0 1 0) 
-;;                   (vector 0 0 1)))
-;;
-;;(define A (matrix (vector 1 2 3)
-;;                  (vector 5 4 3)
-;;                  (vector 3 1 5)))
+(define I3 (matrix (vector 1 0 0) 
+                   (vector 0 1 0) 
+                   (vector 0 0 1)))
+
+(define A (matrix (vector 1 2 3)
+                  (vector 5 4 3)
+                  (vector 3 1 5)))
 
 
 
