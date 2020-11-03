@@ -65,3 +65,14 @@ string_cmp(string s1, string s2)
     }
   return 0;
 }
+void
+strrmleading(char* s)
+{
+  int i = 0;
+  int j = 0;
+  for(i=0; s[i] == ' '; i++);
+  for(;s[i+j]; j++){
+    s[j] = s[i+j];
+  }
+  s[j] = '\0';
+}

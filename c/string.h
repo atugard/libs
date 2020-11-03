@@ -1,4 +1,6 @@
 #include <stdarg.h>
+#include <string.h>
+
 
 typedef char *string;
 
