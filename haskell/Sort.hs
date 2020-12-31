@@ -1,5 +1,7 @@
 module Sort (quicksort) where
 
+--QWEQWEQWIE
+
 quicksort :: Ord a => [a] -> [a]
 quicksort []     = []
 quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
