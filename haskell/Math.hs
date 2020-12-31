@@ -1,6 +1,20 @@
-import Data.Maybe 
+module Math (fac, gcdLC, inverseModuloN, derivative, definite_integral, integral, permutationsN, permutations) where 
 
-import Sort 
+import           Data.Maybe
+import           Sort
+
+--just so I can print fac n / fac k 
+fac ::(Eq a, Fractional a) => a -> a
+fac 0 = 1
+fac n = n * fac (n - 1)
+
+
+filterDuplicates :: Ord a => [a] -> [a]
+filterDuplicates xs = f . filter (\(x, y) -> x /= y) $ zip oxs (tail oxs)
+  where oxs          = quicksort xs
+        f (y:ys)     = if null ys
+                          then [fst y, snd y]
+                          else fst y: f ys
 
 _gcdTrail :: Int -> Int -> [[Int]] -> [[Int]]
 _gcdTrail 0 _ res = res 
@@ -79,12 +93,23 @@ definite_integral = definite_integral_approx 10000
 integral :: (Float -> Float) -> Float -> Float 
 integral f x = definite_integral f 0 x
 
-_permutations :: Eq a => [a] -> [a] -> [[a]]
+_permutations :: (Ord a , Eq a) => [a] -> [a] -> [[a]]
 _permutations [] _  = [] 
 _permutations [x] _ = [[x]]
 _permutations _  [] = []
 _permutations xs (y:ys) =  ((:) <$> [y] <*> _permutations rest rest) ++ _permutations xs ys 
   where rest = filter (/= y) xs 
 
-permutations :: Eq a => [a] -> [[a]]
+permutations :: (Ord a, Eq a) => [a] -> [[a]]
 permutations xs = _permutations xs xs 
+
+permutationsN :: (Eq a, Ord a) => Int -> [a] -> [[a]]
+permutationsN k xs = filterDuplicates . map (take k) . permutations $ xs 
+
+--5. The numbers 1,2,..., are arranged randomly. Find the probability that the digits 
+--   1,2...,k (k<n) appear as neighbors in that order.
+
+--sol5 :: Int -> Float 
+--sol5 k n = map check zip perm 
+--  where perm  = permutations [1..n]
+--        check (x:xs) = 
