@@ -9,11 +9,11 @@ fac ::(Eq a, Fractional a) => a -> a
 fac 0 = 1
 fac n = n * fac (n - 1)
 
-int2Bin :: Int -> [[Int]]
-int2Bin 0 = []
-int2Bin 1 = [[0], [1]]
-int2Bin n =  map (\x -> [0] ++ x) rest ++ map (\x -> [1] ++ x) rest
-  where rest = int2Bin (n-1)
+binaryCollections :: Int -> [[Int]]
+binaryCollections 0 = []
+binaryCollections 1 = [[0], [1]]
+binaryCollections n =  map (\x -> [0] ++ x) rest ++ map (\x -> [1] ++ x) rest
+  where rest = binaryCollections (n-1)
 
 (\\) :: (Eq a) => [a] -> [a] -> [a] 
 (\\) xs [] = xs 
@@ -248,7 +248,7 @@ makeCashier n k = [replicate n Quarter, replicate k Halfdollar]
 
 --need to generate all possible binary numbers up to n...
 possibleTransactions :: Int -> [[Money]]
-possibleTransactions n = map (map (\x -> if x == 0 then Quarter else Halfdollar)) $ int2Bin n
+possibleTransactions n = map (map (\x -> if x == 0 then Quarter else Halfdollar)) $ binaryCollections n
 
 --returns state of cashier. if the transaction fails, returns Nothing.
 transaction :: Cashier -> Money -> Maybe Cashier 
