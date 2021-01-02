@@ -1,5 +1,4 @@
-{-# LANGUAGE DefaultSignatures #-}
-module Math (fac, gcdLC, inverseModuloN, derivative, definite_integral, integral, permutationsN, permutations, collectionsN, collections) where 
+module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections) where 
 
 import           Data.Maybe
 import           Sort
@@ -12,13 +11,13 @@ fac n = n * fac (n - 1)
 binaryCollections :: Int -> [[Int]]
 binaryCollections 0 = []
 binaryCollections 1 = [[0], [1]]
-binaryCollections n =  map (\x -> [0] ++ x) rest ++ map (\x -> [1] ++ x) rest
+binaryCollections n =  map (0:) rest ++ map (1:) rest
   where rest = binaryCollections (n-1)
 
 (\\) :: (Eq a) => [a] -> [a] -> [a] 
 (\\) xs [] = xs 
 (\\) [] _  = [] 
-(\\) xs (y:ys) = (filter (/= y) xs) \\ ys 
+(\\) xs (y:ys) = filter (/= y) xs \\ ys 
 
 naiveSearch :: (Eq a) => [a] -> [a] -> Bool 
 naiveSearch [] [] = True 
@@ -34,7 +33,7 @@ foldr' _ empt _ [] = empt
 foldr' op empt xs ys = op xs ys || foldr' op empt xs (tail ys)
 
 sublist :: (Eq a) => [a] -> [a] -> Bool 
-sublist xs ys = foldr' naiveSearch False xs ys
+sublist = foldr' naiveSearch False
 
 
 -- returns true if all elements in xs are in ys, irrespective of how they are placed in the list. 
@@ -45,7 +44,7 @@ inList (x:xs) ys = x `elem` ys && inList xs ys
 
 
 filterDuplicates :: Ord a => [a] -> [a]
-filterDuplicates xs = f . filter (\(x, y) -> x /= y) $ zip oxs (tail oxs)
+filterDuplicates xs = f . filter (uncurry (/=)) $ zip oxs (tail oxs)
   where oxs          = quicksort xs
         f (y:ys)     = if null ys
                           then [fst y, snd y]
@@ -113,21 +112,21 @@ inverseModuloN a n
         then Just $ (d !! 2) `mod` n 
         else Just $ (d !! 0) `mod` n
 
-derivative_approx :: Float -> (Float -> Float) -> Float -> Float 
-derivative_approx h f x = (f (x + h) - f x) / h
+derivativeApprox :: Float -> (Float -> Float) -> Float -> Float 
+derivativeApprox h f x = (f (x + h) - f x) / h
 
 derivative :: (Float -> Float) -> Float -> Float 
-derivative = derivative_approx 0.001
+derivative = derivativeApprox 0.001
 
-definite_integral_approx :: Float -> (Float -> Float) -> Float -> Float -> Float 
-definite_integral_approx n f a b = dx * sum [f(a + (i-1) * dx) | i <- [1..n]]
+definiteIntegralApprox :: Float -> (Float -> Float) -> Float -> Float -> Float 
+definiteIntegralApprox n f a b = dx * sum [f(a + (i-1) * dx) | i <- [1..n]]
   where dx = (b-a)/n
 
-definite_integral :: (Float -> Float) -> Float -> Float -> Float 
-definite_integral = definite_integral_approx 10000
+definiteIntegral :: (Float -> Float) -> Float -> Float -> Float 
+definiteIntegral = definiteIntegralApprox 10000
 
 integral :: (Float -> Float) -> Float -> Float 
-integral f x = definite_integral f 0 x
+integral f = definiteIntegral f 0
 
 _permutationsN :: (Ord a , Eq a) => Int -> [a] -> [a] -> [[a]]
 _permutationsN _ [] _  = [] 
@@ -148,7 +147,7 @@ combinationsN :: (Ord a) => Int -> [a] -> [[a]]
 combinationsN 0 xs    = [[]]
 combinationsN _ []    = []
 combinationsN 1 xs    = copies 1 xs 
-combinationsN k (x:xs) = (map (x:) $ combinationsN (k-1) xs) ++ combinationsN k xs 
+combinationsN k (x:xs) = map (x :) (combinationsN (k - 1) xs) ++ combinationsN k xs 
 
 --5. The numbers 1,2,..., are arranged randomly. Find the probability that the digits 
 --   1,2...,k (k<n) appear as neighbors in that order.
@@ -166,7 +165,7 @@ sol5 k n = fnum / fdenom
 --   I think its 1 - nCk/n^k, lets see if we can write a program that explicitly computes lists of the possible outcomes 
 
 copies :: (Eq a, Ord a) => Int -> [a] -> [[a]] 
-copies k xs = map (replicate k) xs 
+copies k = map (replicate k)
 
 collectionsN :: (Eq a, Ord a) => Int -> [a] -> [[a]]
 collectionsN 0 _ = [] 
@@ -183,7 +182,7 @@ eqList [x] = True
 eqList (x:y:xs) = x == y && eqList (y:xs)
 
 repetitions :: (Ord a, Eq a) => [a] -> Bool 
-repetitions xs =  or . map (\(x,y) -> x == y) $ zip oxs (tail oxs)
+repetitions xs =  any (uncurry (==)) $ zip oxs (tail oxs)
   where oxs = quicksort xs 
 
 sol6 :: Int -> Int -> Float 
@@ -191,7 +190,7 @@ sol6 k n = twoOrMoreF / allF
   where        
         cks        = collectionsN k [1..n]
         twoOrMore  = length $ filter repetitions cks
-        all        = length $ cks
+        all        = length cks
         twoOrMoreF = fromIntegral twoOrMore :: Float 
         allF       = fromIntegral all :: Float 
 
@@ -267,8 +266,7 @@ outcomes :: Int -> Int -> [Maybe Cashier]
 outcomes n k =  map (transactions cash) trans
   where trans = possibleTransactions  n
         cash  = makeCashier k 0 
-
 sol9 n k = num/denom
   where xs    = outcomes (2*n) (2*k)
         num   = fromIntegral $ length (filter isJust xs) :: Float 
-        denom = fromIntegral $ (length xs) :: Float 
+        denom = fromIntegral $ length xs :: Float 
