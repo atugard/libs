@@ -234,23 +234,36 @@ sol8_2 r n k = num/den
 --   equally likely that each ticket is paid for with a quarter or a half-dollar coin. 
 
 data Money = Quarter | Halfdollar
-  deriving Show 
+  deriving (Show, Eq)
 
 type Cashier = [[Money]]
-makeCashier n k = [replicate n Quarter, replicate k Halfdollar]
 
-transaction :: Money -> Cashier -> Maybe Cashier 
-transaction Halfdollar []       = Nothing 
-transaction Quarter [qs, ds]    = Just [Quarter:qs, ds]
-transaction Halfdollar [qs, ds] = Just [Quarter:qs, drop 1 ds]
+makeCashier :: Int -> Int -> Cashier 
+makeCashier n k = [replicate n Quarter, replicate k Halfdollar]
 
 possibleTransactions :: Int -> [[Money]]
 possibleTransactions n = map (map (\x -> if x `mod` 2 == 0 then Quarter else Halfdollar)) $ permutations [1..n]
---transaction :: Money -> Cashier -> Cashier 
---transaction Zero c = c 
---transaction Quarter c =
---  let (val, money) = runCashier c Zero 
---   in Cashier (\x -> case x of 
---                             Zero       -> (val, Zero)
---                             Quarter    -> (val - 0.25, Zero)
---                             HalfDollar -> (val - 0.50, Quarter))
+
+--returns state of cashier. if the transaction fails, returns Nothing.
+transaction :: Cashier -> Money -> Maybe Cashier 
+transaction [[],_] Halfdollar   = Nothing 
+transaction [qs, hs] Quarter    = Just [Quarter:qs, hs]
+transaction [qs,hs] Halfdollar  = Just [drop 1 qs, Halfdollar : hs]
+
+
+--Takes a list of money, and executes all of the transactions. If one fails, returns nothing. 
+transactions :: Cashier -> [Money] -> Maybe Cashier 
+transactions c []      = Just c 
+transactions c (x:xs)  = case transaction c x of 
+                           Nothing       -> Nothing 
+                           Just c'       -> transactions c' xs
+
+outcomes :: Int -> Int -> [Maybe Cashier]
+outcomes n k =  map (transactions cash) trans
+  where trans = possibleTransactions  n
+        cash  = makeCashier k 0 
+
+sol9 n k = num/denom
+  where xs    = (outcomes n k) 
+        num   = fromIntegral $ length (filter isJust xs) :: Float 
+        denom = fromIntegral $ (length xs) :: Float 
