@@ -9,6 +9,11 @@ fac ::(Eq a, Fractional a) => a -> a
 fac 0 = 1
 fac n = n * fac (n - 1)
 
+int2Bin :: Int -> [[Int]]
+int2Bin 0 = []
+int2Bin 1 = [[0], [1]]
+int2Bin n =  map (\x -> [0] ++ x) rest ++ map (\x -> [1] ++ x) rest
+  where rest = int2Bin (n-1)
 
 (\\) :: (Eq a) => [a] -> [a] -> [a] 
 (\\) xs [] = xs 
@@ -241,15 +246,15 @@ type Cashier = [[Money]]
 makeCashier :: Int -> Int -> Cashier 
 makeCashier n k = [replicate n Quarter, replicate k Halfdollar]
 
+--need to generate all possible binary numbers up to n...
 possibleTransactions :: Int -> [[Money]]
-possibleTransactions n = map (map (\x -> if x `mod` 2 == 0 then Quarter else Halfdollar)) $ permutations [1..n]
+possibleTransactions n = map (map (\x -> if x == 0 then Quarter else Halfdollar)) $ int2Bin n
 
 --returns state of cashier. if the transaction fails, returns Nothing.
 transaction :: Cashier -> Money -> Maybe Cashier 
 transaction [[],_] Halfdollar   = Nothing 
 transaction [qs, hs] Quarter    = Just [Quarter:qs, hs]
 transaction [qs,hs] Halfdollar  = Just [drop 1 qs, Halfdollar : hs]
-
 
 --Takes a list of money, and executes all of the transactions. If one fails, returns nothing. 
 transactions :: Cashier -> [Money] -> Maybe Cashier 
@@ -264,6 +269,6 @@ outcomes n k =  map (transactions cash) trans
         cash  = makeCashier k 0 
 
 sol9 n k = num/denom
-  where xs    = (outcomes n k) 
+  where xs    = outcomes (2*n) (2*k)
         num   = fromIntegral $ length (filter isJust xs) :: Float 
         denom = fromIntegral $ (length xs) :: Float 
