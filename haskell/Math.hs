@@ -229,3 +229,28 @@ sol8_2 r n k = num/den
         num = fromIntegral (length cxs) :: Float 
         den = fromIntegral (length pxs) :: Float 
 
+--9. Waiting in line for a Saturday morning movie show are 2n children. Tickets are priced at a quarter each. Find the probability that nobody
+--   will have to wait for change if, before a ticket is sold to the first customer, the cashier has 2k (k < n) quarters. Assume that it is 
+--   equally likely that each ticket is paid for with a quarter or a half-dollar coin. 
+
+data Money = Quarter | Halfdollar
+  deriving Show 
+
+type Cashier = [[Money]]
+makeCashier n k = [replicate n Quarter, replicate k Halfdollar]
+
+transaction :: Money -> Cashier -> Maybe Cashier 
+transaction Halfdollar []       = Nothing 
+transaction Quarter [qs, ds]    = Just [Quarter:qs, ds]
+transaction Halfdollar [qs, ds] = Just [Quarter:qs, drop 1 ds]
+
+possibleTransactions :: Int -> [[Money]]
+possibleTransactions n = map (map (\x -> if x `mod` 2 == 0 then Quarter else Halfdollar)) $ permutations [1..n]
+--transaction :: Money -> Cashier -> Cashier 
+--transaction Zero c = c 
+--transaction Quarter c =
+--  let (val, money) = runCashier c Zero 
+--   in Cashier (\x -> case x of 
+--                             Zero       -> (val, Zero)
+--                             Quarter    -> (val - 0.25, Zero)
+--                             HalfDollar -> (val - 0.50, Quarter))
