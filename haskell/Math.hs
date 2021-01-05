@@ -8,11 +8,9 @@ fac ::(Eq a, Fractional a) => a -> a
 fac 0 = 1
 fac n = n * fac (n - 1)
 
+
 binaryCollections :: Int -> [[Int]]
-binaryCollections 0 = []
-binaryCollections 1 = [[0], [1]]
-binaryCollections n =  map (0:) rest ++ map (1:) rest
-  where rest = binaryCollections (n-1)
+binaryCollections n = collectionsN n [0,1]
 
 (\\) :: (Eq a) => [a] -> [a] -> [a] 
 (\\) xs [] = xs 
@@ -169,8 +167,9 @@ copies k = map (replicate k)
 
 collectionsN :: (Eq a, Ord a) => Int -> [a] -> [[a]]
 collectionsN 0 _ = [] 
-collectionsN 1 xs = quicksort $ copies 1 xs 
-collectionsN k xs = quicksort $ concatMap (\x -> map (x:) $ collectionsN (k-1) xs) xs  
+collectionsN 1 xs = copies 1 xs 
+collectionsN n xs = concatMap (\x -> (:) <$> [x] <*> rest) xs  
+  where rest = collectionsN (n-1) xs 
 
 collections :: (Eq a, Ord a) => [a] -> [[a]]
 collections xs = collectionsN (length xs) xs 
@@ -270,3 +269,20 @@ sol9 n k = num/denom
   where xs    = outcomes (2*n) (2*k)
         num   = fromIntegral $ length (filter isJust xs) :: Float 
         denom = fromIntegral $ length xs :: Float 
+
+--10. Each box of a certain brand of breakfast cereal contains a small charm, with k distinct charms forming a set. Assuming that the chance of drawing any particular charm is equal to that of drawing any other charm, show that the probability of finding at least one complete set of charms in a random purchase of N >= boxes equals
+--1 - |k|((k-1)/k)^N + |k|((k-2)/k)^N - |k|((k-3)/k)^N  + ... + (-1)^(k-1)|k  |(1/k)^N
+--    |1|              |2|              |3|                               |k-1|
+--Hint: Use (1.3.6)
+
+allCharms :: Int -> Int -> [[Int]]
+allCharms n k = collectionsN k [1..n]
+
+setCharms :: Int -> Int -> [[Int]]
+setCharms n k = filter (inList [1..n]) (allCharms n k)
+
+sol10 n k = num/denom 
+  where xs    = setCharms n k 
+        ys    = allCharms n k 
+        num   = fromIntegral $ length xs :: Float 
+        denom = fromIntegral $ length ys :: Float 
