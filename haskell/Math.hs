@@ -1,7 +1,84 @@
-module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group) where 
+module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group, Ring, Field, Vectorspace, Rn) where 
 
 import           Data.Maybe
 import           Sort
+
+
+class Group m => Ring m where
+  -- m <#> rempty = rempty <#> m = m  
+  rempty :: m 
+  --m1 <#> (m2 <+> m3) = (m1 <#> m2) <+> (m1 <#> m3)
+  --(m1 <+> m2) <#> m3 = (m1 <#> m3) <+> (m2 <#> m3)
+  (<#>)  :: m -> m -> m 
+
+--gotta think up better names, lol.
+class Ring m => Field m where 
+  finverse :: m -> m
+
+--Want to change sig to Field a => a -> m -> m. Compiler was complaining. Changed it to double to see if this works.
+class Group m => Vectorspace m where 
+  (#) :: Double -> m -> m 
+
+
+instance Semigroup Int where 
+  (<>) = (+)
+
+instance Monoid Int where 
+  mempty = 0
+
+instance Group Int where 
+  (<+>) = (<>)
+  ginverse x = -x
+  gempty = mempty 
+
+instance Ring Int where 
+  (<#>) = (*)
+  rempty = 1 
+
+instance Semigroup Double where 
+  x <> y  = x + y
+
+instance Monoid Double where 
+  mempty = 0
+
+instance Group Double where 
+  (<+>) = (<>)
+  ginverse x = -x
+  gempty = mempty 
+
+instance Ring Double where 
+  (<#>) = (*)
+  rempty = 1 
+
+instance Field Double where 
+  finverse x 
+    | x == 0    = 0
+    | otherwise = 1/x
+
+
+newtype Rn = Rn [Double] 
+--coordsRn :: Rn -> [Double]
+--coordsRn (Rn xs) = xs 
+
+instance Show Rn where 
+  show (Rn xs) = "Rn " ++ show xs 
+
+instance Semigroup Rn where 
+  (Rn xs) <> (Rn ys)  = Rn (zipWith (+) xs ys)
+
+instance Monoid Rn where 
+  mempty = Rn (repeat 0)
+
+instance Group Rn where 
+  (Rn xs) <+> (Rn ys) 
+    | length xs == length ys = Rn xs <> Rn ys
+    | otherwise              = error "Vectors must have the same dimension."
+
+  ginverse (Rn xs) = Rn (map negate xs)
+  gempty = mempty 
+
+instance Vectorspace Rn where 
+  x # (Rn ys) = Rn [x*y | y <- ys]
 
 --just so I can print fac n / fac k 
 fac ::(Eq a, Fractional a) => a -> a
@@ -342,4 +419,5 @@ toTranspose (x:y:ys) = transposeIJ x y : toTranspose (y:ys)
 
 permutation :: (Eq a) => [a] -> Permutation a 
 permutation xs = Permutation (toTranspose xs)
+
 
