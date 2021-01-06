@@ -335,8 +335,6 @@ runPermutation :: Permutation a -> a -> a
 runPermutation (Permutation []) = id 
 runPermutation (Permutation (t:ts)) = runTranspose t . runPermutation (Permutation ts) 
 
-xs = Permutation [transposeIJ 'd' 'a', transposeIJ 'a' 'f', transposeIJ 'f' 'g']
-
 toTranspose :: (Eq a) => [a] -> [Transpose a]
 toTranspose [] = [] 
 toTranspose [x] = [gempty]
