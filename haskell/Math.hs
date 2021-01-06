@@ -70,9 +70,7 @@ instance Monoid Rn where
   mempty = Rn (repeat 0)
 
 instance Group Rn where 
-  (Rn xs) <+> (Rn ys) 
-    | length xs == length ys = Rn xs <> Rn ys
-    | otherwise              = error "Vectors must have the same dimension."
+  (Rn xs) <+> (Rn ys) = Rn xs <> Rn ys
 
   ginverse (Rn xs) = Rn (map negate xs)
   gempty = mempty 
