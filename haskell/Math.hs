@@ -1,4 +1,4 @@
-module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections) where 
+module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group) where 
 
 import           Data.Maybe
 import           Sort
@@ -41,13 +41,14 @@ inList xs [] = False
 inList (x:xs) ys = x `elem` ys && inList xs ys 
 
 
-filterDuplicates :: Ord a => [a] -> [a]
-filterDuplicates xs = f . filter (uncurry (/=)) $ zip oxs (tail oxs)
-  where oxs          = quicksort xs
-        f (y:ys)     = if null ys
-                          then [fst y, snd y]
-                          else fst y: f ys
+pairConcat ::[(a,a)] -> [a] 
+pairConcat (y:ys) 
+  | null ys   = [fst y, snd y]
+  | otherwise = fst y: pairConcat ys
 
+filterDuplicates :: Ord a => [a] -> [a]
+filterDuplicates xs = pairConcat . filter (uncurry (/=)) $ zip oxs (tail oxs)
+  where oxs          = quicksort xs
 
 _gcdTrail :: Int -> Int -> [[Int]] -> [[Int]]
 _gcdTrail 0 _ res = res 
@@ -286,3 +287,61 @@ sol10 n k = num/denom
         ys    = allCharms n k 
         num   = fromIntegral $ length xs :: Float 
         denom = fromIntegral $ length ys :: Float 
+
+class Monoid m => Group m where
+    gempty   :: m 
+    (<+>)    :: m -> m -> m 
+    ginverse :: m -> m
+    
+
+newtype (Transpose a) = Transpose
+  { runTranspose :: a -> a
+  } 
+
+newtype Permutation a = Permutation [Transpose a]
+
+instance Semigroup (Transpose a) where 
+  (Transpose s1) <> (Transpose s2)   = Transpose (s1 . s2)
+
+instance Monoid (Transpose a) where 
+  mempty = Transpose id
+
+instance Group (Transpose a) where 
+  gempty = mempty 
+  (<+>) = (<>)
+  --a transposition is its own inverse
+  ginverse (Transpose f) = Transpose f
+
+transposeIJ :: (Eq a) => a -> a -> Transpose a 
+transposeIJ i j = Transpose _transposeIJ
+  where 
+    _transposeIJ x
+      | x==i      = j 
+      | x==j      = i 
+      | otherwise = x 
+
+instance Semigroup (Permutation a) where 
+  (Permutation p1) <> (Permutation p2) = Permutation (p1++p2)
+
+instance Monoid (Permutation a) where 
+  mempty = Permutation [] 
+
+instance Group (Permutation a) where 
+  gempty = mempty 
+  (<+>) = (<>)
+  ginverse (Permutation xs) = Permutation (reverse xs)
+
+runPermutation :: Permutation a -> a -> a 
+runPermutation (Permutation []) = id 
+runPermutation (Permutation (t:ts)) = runTranspose t . runPermutation (Permutation ts) 
+
+xs = Permutation [transposeIJ 'd' 'a', transposeIJ 'a' 'f', transposeIJ 'f' 'g']
+
+toTranspose :: (Eq a) => [a] -> [Transpose a]
+toTranspose [] = [] 
+toTranspose [x] = [gempty]
+toTranspose (x:y:ys) = transposeIJ x y : toTranspose (y:ys)
+
+permutation :: (Eq a) => [a] -> Permutation a 
+permutation xs = Permutation (toTranspose xs)
+
