@@ -1,7 +1,62 @@
-module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group, Ring, Field, Vectorspace, Rn) where 
+module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group, Ring, Field, Vectorspace, Rn, Matrix, dot, mmul) where 
 
 import           Data.Maybe
 import           Sort
+
+class Monoid m => Group m where
+    gempty   :: m 
+    (<+>)    :: m -> m -> m 
+    ginverse :: m -> m
+    
+
+newtype (Transpose a) = Transpose
+  { runTranspose :: a -> a
+  } 
+
+newtype Permutation a = Permutation [Transpose a]
+
+instance Semigroup (Transpose a) where 
+  (Transpose s1) <> (Transpose s2)   = Transpose (s1 . s2)
+
+instance Monoid (Transpose a) where 
+  mempty = Transpose id
+
+instance Group (Transpose a) where 
+  gempty = mempty 
+  (<+>) = (<>)
+  --a transposition is its own inverse
+  ginverse (Transpose f) = Transpose f
+
+transposeIJ :: (Eq a) => a -> a -> Transpose a 
+transposeIJ i j = Transpose _transposeIJ
+  where 
+    _transposeIJ x
+      | x==i      = j 
+      | x==j      = i 
+      | otherwise = x 
+
+instance Semigroup (Permutation a) where 
+  (Permutation p1) <> (Permutation p2) = Permutation (p1++p2)
+
+instance Monoid (Permutation a) where 
+  mempty = Permutation [] 
+
+instance Group (Permutation a) where 
+  gempty = mempty 
+  (<+>) = (<>)
+  ginverse (Permutation xs) = Permutation (reverse xs)
+
+runPermutation :: Permutation a -> a -> a 
+runPermutation (Permutation []) = id 
+runPermutation (Permutation (t:ts)) = runTranspose t . runPermutation (Permutation ts) 
+
+toTranspose :: (Eq a) => [a] -> [Transpose a]
+toTranspose [] = [] 
+toTranspose [x] = [gempty]
+toTranspose (x:y:ys) = transposeIJ x y : toTranspose (y:ys)
+
+permutation :: (Eq a) => [a] -> Permutation a 
+permutation xs = Permutation (toTranspose xs)
 
 
 class Group m => Ring m where
@@ -10,6 +65,29 @@ class Group m => Ring m where
   --m1 <#> (m2 <+> m3) = (m1 <#> m2) <+> (m1 <#> m3)
   --(m1 <+> m2) <#> m3 = (m1 <#> m3) <+> (m2 <#> m3)
   (<#>)  :: m -> m -> m 
+
+newtype Matrix = Matrix [Rn]
+
+instance Show Matrix where 
+  show (Matrix vs) = "Matrix " ++ show vs 
+
+dot :: Rn -> Rn  -> Double 
+dot (Rn xs) (Rn ys) = sum $ zipWith (*) xs ys 
+
+magnitude :: Rn -> Double 
+magnitude v = sqrt (v `dot` v)
+
+mmul :: Matrix -> Rn -> Rn  
+mmul (Matrix ws) v = Rn (map (dot v) ws) 
+
+matrix :: [[Double]] -> Matrix 
+matrix xs = Matrix (map Rn xs)
+
+determinant :: Matrix -> Double 
+determinant = undefined 
+--Here I can sum over the permutation group... 
+--I need to generate all n! permutations in that group and then map over them... the formula is 
+--An alternative is to use a recursive implementation...
 
 --gotta think up better names, lol.
 class Ring m => Field m where 
@@ -73,6 +151,7 @@ instance Group Rn where
   (Rn xs) <+> (Rn ys) = Rn xs <> Rn ys
 
   ginverse (Rn xs) = Rn (map negate xs)
+
   gempty = mempty 
 
 instance Vectorspace Rn where 
@@ -362,60 +441,5 @@ sol10 n k = num/denom
         ys    = allCharms n k 
         num   = fromIntegral $ length xs :: Float 
         denom = fromIntegral $ length ys :: Float 
-
-class Monoid m => Group m where
-    gempty   :: m 
-    (<+>)    :: m -> m -> m 
-    ginverse :: m -> m
-    
-
-newtype (Transpose a) = Transpose
-  { runTranspose :: a -> a
-  } 
-
-newtype Permutation a = Permutation [Transpose a]
-
-instance Semigroup (Transpose a) where 
-  (Transpose s1) <> (Transpose s2)   = Transpose (s1 . s2)
-
-instance Monoid (Transpose a) where 
-  mempty = Transpose id
-
-instance Group (Transpose a) where 
-  gempty = mempty 
-  (<+>) = (<>)
-  --a transposition is its own inverse
-  ginverse (Transpose f) = Transpose f
-
-transposeIJ :: (Eq a) => a -> a -> Transpose a 
-transposeIJ i j = Transpose _transposeIJ
-  where 
-    _transposeIJ x
-      | x==i      = j 
-      | x==j      = i 
-      | otherwise = x 
-
-instance Semigroup (Permutation a) where 
-  (Permutation p1) <> (Permutation p2) = Permutation (p1++p2)
-
-instance Monoid (Permutation a) where 
-  mempty = Permutation [] 
-
-instance Group (Permutation a) where 
-  gempty = mempty 
-  (<+>) = (<>)
-  ginverse (Permutation xs) = Permutation (reverse xs)
-
-runPermutation :: Permutation a -> a -> a 
-runPermutation (Permutation []) = id 
-runPermutation (Permutation (t:ts)) = runTranspose t . runPermutation (Permutation ts) 
-
-toTranspose :: (Eq a) => [a] -> [Transpose a]
-toTranspose [] = [] 
-toTranspose [x] = [gempty]
-toTranspose (x:y:ys) = transposeIJ x y : toTranspose (y:ys)
-
-permutation :: (Eq a) => [a] -> Permutation a 
-permutation xs = Permutation (toTranspose xs)
 
 
