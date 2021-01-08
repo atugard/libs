@@ -148,7 +148,7 @@ evalPoly (Rx []) _ = 0
 evalPoly (Rx fs) x = sum [(x^d)*c | (d,c) <- fs]
 
 simplifyPoly :: Rx -> Rx 
-simplifyPoly (Rx xs) = Rx $ reverse . removeZeroes . groupDuplicates . quicksort $ xs
+simplifyPoly (Rx xs) = Rx . reverse . removeZeroes . groupDuplicates . quicksort $ xs
   where 
     removeZeroes               = filter (\(c,d) -> d /= 0)
     groupDuplicates []         = [] 
