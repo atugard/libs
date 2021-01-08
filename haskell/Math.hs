@@ -20,7 +20,7 @@ class Ring m => Field m where
 class Group m => Vectorspace m where 
   (#) :: Double -> m -> m 
 
-
+--Now if I write a parser that takes strings of the form ax^2 + bx + c and transforms it to the proper internal representation...
 
 newtype (Transpose a) = Transpose
   { runTranspose :: a -> a
@@ -159,19 +159,15 @@ simplifyPoly (Rx xs) = Rx . reverse . removeZeroes . groupDuplicates . quicksort
 takeWhileR :: (a -> Bool) -> [a] -> ([a],[a])
 takeWhileR p = _takeWhileR p []
   where 
-    _takeWhileR p res [] = (reverse res, [])
+    _takeWhileR p result [] 
+                  = (reverse result, [])
     _takeWhileR p result (x:xs) 
       | p x       = _takeWhileR p (result ++ [x]) xs 
       | otherwise = (result, x:xs)
 
 
 instance Semigroup Rx where 
-  (Rx xs) <> (Rx ys) = simplifyPoly . Rx $ matching ++ rest 
-      where matching = [(d,c+c') | (d,c) <- xs, (d',c') <- ys, d == d']
-            ds       = map fst matching
-            fxs      = filter (\x -> fst x `notElem` ds) xs
-            fys      = filter (\y -> fst y `notElem` ds) ys
-            rest     = fxs ++ fys 
+   (Rx xs) <> (Rx ys) = simplifyPoly . Rx $ xs++ys
 
 instance Monoid Rx where 
   mempty = Rx [] 
@@ -180,13 +176,8 @@ instance Group Rx where
   ginverse (Rx xs) = Rx $ map (\(c,d) -> (c, -d)) xs 
 
 instance Ring Rx where 
-  (Rx xs) <#> (Rx ys) =  simplifyPoly $ Rx [(d1+d2, c1*c2) | (d1,c1) <- xs, (d2,c2) <- ys]
-    where n = map fst xs 
   rempty = Rx [(0,1)]
-
-shift :: Int -> [a] -> [a]
-shift n xs = drop k xs ++ take k xs
-  where k =  (-n) `mod` length xs  
+  (Rx xs) <#> (Rx ys) =  simplifyPoly $ Rx [(d1+d2, c1*c2) | (d1,c1) <- xs, (d2,c2) <- ys]
 
 binaryCollections :: Int -> [[Int]]
 binaryCollections n = collectionsN n [0,1]
@@ -212,13 +203,11 @@ foldr' op empt xs ys = op xs ys || foldr' op empt xs (tail ys)
 sublist :: (Eq a) => [a] -> [a] -> Bool 
 sublist = foldr' naiveSearch False
 
-
 -- returns true if all elements in xs are in ys, irrespective of how they are placed in the list. 
 inList :: (Eq a) => [a] -> [a] -> Bool 
 inList [] ys = True
 inList xs [] = False 
 inList (x:xs) ys = x `elem` ys && inList xs ys 
-
 
 pairConcat ::[(a,a)] -> [a] 
 pairConcat (y:ys) 
