@@ -1,13 +1,26 @@
-module Math (fac, gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group, Ring, Field, Vectorspace, Rn, Matrix, dot, mmul) where 
+module Math (gcdLC, inverseModuloN, derivative, definiteIntegral, integral, permutationsN, permutations, collectionsN, collections, Group, Ring, Field, Vectorspace, Rn, Matrix, dot, mmul, Rx) where 
 
 import           Data.Maybe
 import           Sort
 
 class Monoid m => Group m where
-    gempty   :: m 
-    (<+>)    :: m -> m -> m 
-    ginverse :: m -> m
-    
+  ginverse :: m -> m
+
+class Group m => Ring m where
+ -- m <#> rempty = rempty <#> m = m  
+ rempty :: m 
+ --m1 <#> (m2 <+> m3) = (m1 <#> m2) <+> (m1 <#> m3)
+ --(m1 <+> m2) <#> m3 = (m1 <#> m3) <+> (m2 <#> m3)
+ (<#>)  :: m -> m -> m 
+
+class Ring m => Field m where 
+  finverse :: m -> m
+
+--Want to change sig to Field a => a -> m -> m. Compiler was complaining. Changed it to double to see if this works.
+class Group m => Vectorspace m where 
+  (#) :: Double -> m -> m 
+
+
 
 newtype (Transpose a) = Transpose
   { runTranspose :: a -> a
@@ -22,9 +35,6 @@ instance Monoid (Transpose a) where
   mempty = Transpose id
 
 instance Group (Transpose a) where 
-  gempty = mempty 
-  (<+>) = (<>)
-  --a transposition is its own inverse
   ginverse (Transpose f) = Transpose f
 
 transposeIJ :: (Eq a) => a -> a -> Transpose a 
@@ -42,8 +52,6 @@ instance Monoid (Permutation a) where
   mempty = Permutation [] 
 
 instance Group (Permutation a) where 
-  gempty = mempty 
-  (<+>) = (<>)
   ginverse (Permutation xs) = Permutation (reverse xs)
 
 runPermutation :: Permutation a -> a -> a 
@@ -52,19 +60,11 @@ runPermutation (Permutation (t:ts)) = runTranspose t . runPermutation (Permutati
 
 toTranspose :: (Eq a) => [a] -> [Transpose a]
 toTranspose [] = [] 
-toTranspose [x] = [gempty]
+toTranspose [x] = [mempty]
 toTranspose (x:y:ys) = transposeIJ x y : toTranspose (y:ys)
 
 permutation :: (Eq a) => [a] -> Permutation a 
 permutation xs = Permutation (toTranspose xs)
-
-
-class Group m => Ring m where
-  -- m <#> rempty = rempty <#> m = m  
-  rempty :: m 
-  --m1 <#> (m2 <+> m3) = (m1 <#> m2) <+> (m1 <#> m3)
-  --(m1 <+> m2) <#> m3 = (m1 <#> m3) <+> (m2 <#> m3)
-  (<#>)  :: m -> m -> m 
 
 newtype Matrix = Matrix [Rn]
 
@@ -83,20 +83,11 @@ mmul (Matrix ws) v = Rn (map (dot v) ws)
 matrix :: [[Double]] -> Matrix 
 matrix xs = Matrix (map Rn xs)
 
+--I'm just going to assume the matrix is square for now.
 determinant :: Matrix -> Double 
 determinant = undefined 
---Here I can sum over the permutation group... 
---I need to generate all n! permutations in that group and then map over them... the formula is 
---An alternative is to use a recursive implementation...
 
 --gotta think up better names, lol.
-class Ring m => Field m where 
-  finverse :: m -> m
-
---Want to change sig to Field a => a -> m -> m. Compiler was complaining. Changed it to double to see if this works.
-class Group m => Vectorspace m where 
-  (#) :: Double -> m -> m 
-
 
 instance Semigroup Int where 
   (<>) = (+)
@@ -105,9 +96,7 @@ instance Monoid Int where
   mempty = 0
 
 instance Group Int where 
-  (<+>) = (<>)
   ginverse x = -x
-  gempty = mempty 
 
 instance Ring Int where 
   (<#>) = (*)
@@ -120,9 +109,7 @@ instance Monoid Double where
   mempty = 0
 
 instance Group Double where 
-  (<+>) = (<>)
   ginverse x = -x
-  gempty = mempty 
 
 instance Ring Double where 
   (<#>) = (*)
@@ -148,20 +135,58 @@ instance Monoid Rn where
   mempty = Rn (repeat 0)
 
 instance Group Rn where 
-  (Rn xs) <+> (Rn ys) = Rn xs <> Rn ys
-
   ginverse (Rn xs) = Rn (map negate xs)
-
-  gempty = mempty 
 
 instance Vectorspace Rn where 
   x # (Rn ys) = Rn [x*y | y <- ys]
 
---just so I can print fac n / fac k 
-fac ::(Eq a, Fractional a) => a -> a
-fac 0 = 1
-fac n = n * fac (n - 1)
+newtype Rx = Rx [(Int,Double)]
+  deriving Show 
 
+evalPoly :: Rx -> Double -> Double 
+evalPoly (Rx []) _ = 0
+evalPoly (Rx fs) x = sum [(x^d)*c | (d,c) <- fs]
+
+simplifyPoly :: Rx -> Rx 
+simplifyPoly (Rx xs) = Rx $ reverse . removeZeroes . groupDuplicates . quicksort $ xs
+  where 
+    removeZeroes               = filter (\(c,d) -> d /= 0)
+    groupDuplicates []         = [] 
+    groupDuplicates ((d,c):xs) = let (duplicates, rest) = takeWhileR ((== d) . fst) $ (d,c):xs 
+                                     sum_duplicates     = sum . map snd $ duplicates 
+                                  in (d, sum_duplicates) : groupDuplicates rest 
+
+takeWhileR :: (a -> Bool) -> [a] -> ([a],[a])
+takeWhileR p = _takeWhileR p []
+  where 
+    _takeWhileR p res [] = (reverse res, [])
+    _takeWhileR p result (x:xs) 
+      | p x       = _takeWhileR p (result ++ [x]) xs 
+      | otherwise = (result, x:xs)
+
+
+instance Semigroup Rx where 
+  (Rx xs) <> (Rx ys) = simplifyPoly . Rx $ matching ++ rest 
+      where matching = [(d,c+c') | (d,c) <- xs, (d',c') <- ys, d == d']
+            ds       = map fst matching
+            fxs      = filter (\x -> fst x `notElem` ds) xs
+            fys      = filter (\y -> fst y `notElem` ds) ys
+            rest     = fxs ++ fys 
+
+instance Monoid Rx where 
+  mempty = Rx [] 
+
+instance Group Rx where 
+  ginverse (Rx xs) = Rx $ map (\(c,d) -> (c, -d)) xs 
+
+instance Ring Rx where 
+  (Rx xs) <#> (Rx ys) =  simplifyPoly $ Rx [(d1+d2, c1*c2) | (d1,c1) <- xs, (d2,c2) <- ys]
+    where n = map fst xs 
+  rempty = Rx [(0,1)]
+
+shift :: Int -> [a] -> [a]
+shift n xs = drop k xs ++ take k xs
+  where k =  (-n) `mod` length xs  
 
 binaryCollections :: Int -> [[Int]]
 binaryCollections n = collectionsN n [0,1]
@@ -342,11 +367,11 @@ repetitions xs =  any (uncurry (==)) $ zip oxs (tail oxs)
 sol6 :: Int -> Int -> Float 
 sol6 k n = twoOrMoreF / allF
   where        
-        cks        = collectionsN k [1..n]
-        twoOrMore  = length $ filter repetitions cks
-        all        = length cks
-        twoOrMoreF = fromIntegral twoOrMore :: Float 
-        allF       = fromIntegral all :: Float 
+    cks        = collectionsN k [1..n]
+    twoOrMore  = length $ filter repetitions cks
+    all        = length cks
+    twoOrMoreF = fromIntegral twoOrMore :: Float 
+    allF       = fromIntegral all :: Float 
 
 --Yeah, the answer is 1 - nCk/n^k, with k=5, n=7... one can explicitly check that with sol6 5 7.
 
@@ -362,9 +387,9 @@ sol7 n = (num1/den, num2/den)
         den = fromIntegral (length xs) :: Float 
 
 --The combinatorics gives fst (sol7 n) = n-1 / (2n-1).
---                        snd (sol7 n) = 1 - (fst (sol7 n)) = n/(2n-1)
+  --                        snd (sol7 n) = 1 - (fst (sol7 n)) = n/(2n-1)
 --which matches sol7's output.
---filter (\(x,y) -> (not (inList [1,2] x)) && (not (inList [1,2] y))) . map (splitAt 2) . permutations $ [1..4]
+  --filter (\(x,y) -> (not (inList [1,2] x)) && (not (inList [1,2] y))) . map (splitAt 2) . permutations $ [1..4]
 
 -- 8. In a movie theater that can accomodate n + k people, n people are seated. What is the probability that r <= n given seats are occupied. 
 sol8_1 :: Int -> Int -> Int -> Float 
@@ -418,7 +443,7 @@ transactions c (x:xs)  = case transaction c x of
 
 outcomes :: Int -> Int -> [Maybe Cashier]
 outcomes n k =  map (transactions cash) trans
-  where trans = possibleTransactions  n
+  where trans = possibleTransactions n
         cash  = makeCashier k 0 
 sol9 n k = num/denom
   where xs    = outcomes (2*n) (2*k)
@@ -441,5 +466,4 @@ sol10 n k = num/denom
         ys    = allCharms n k 
         num   = fromIntegral $ length xs :: Float 
         denom = fromIntegral $ length ys :: Float 
-
 
